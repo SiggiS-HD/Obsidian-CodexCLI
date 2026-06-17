@@ -1,0 +1,34 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor / local IDE
+.vscode/
+
+# Runtime / local index data
+.codexcli/
+
+# Project-specific exclusions
+.Prototyp/
+docs/__pycache__/
+docs/codex_chat/
+tests/__pycache__/
+
+# Internal project management
+AGENTS.md
+TASKS.md
+PROJECT.md
+_Weiter.md
+
+# Internal development notes
+docs/codex_dev/

@@ -1,0 +1,85 @@
+<#
+.SYNOPSIS
+  Installiert/aktualisiert Python-Pakete fuer CodexCLI.
+
+.DESCRIPTION
+  Dieses Script ist fuer Setups gedacht, in denen der Obsidian Vault auf einem NAS (UNC) liegt,
+  die Python-venv aber lokal auf dem Windows-PC liegt.
+
+  Es nutzt die gleiche venv-Logik wie run_codexcli.cmd:
+  - Wenn <CODEXCLI_HOME>\.venv existiert, wird diese verwendet.
+  - Sonst wird eine lokale venv unter %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv verwendet.
+
+.PARAMETER Packages
+  Zusaetzliche Pakete, die installiert werden sollen (z.B. "requests", "pydantic==2.7.0").
+
+.PARAMETER RequirementsPath
+  Optionaler Pfad zu requirements.txt (Default: <CODEXCLI_HOME>\requirements.txt).
+
+.PARAMETER VenvBase
+  Optionaler Name fuer %CODEXCLI_VENV% (Default: Env:CODEXCLI_VENV oder "Siggiverse").
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File "<CODEXCLI_HOME>\Neue_Pakete.ps1"
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File "<CODEXCLI_HOME>\Neue_Pakete.ps1" -Packages pypdf
+#>
+
+[CmdletBinding()]
+param(
+  [Parameter(Mandatory = $false)]
+  [string[]]$Packages,
+
+  [Parameter(Mandatory = $false)]
+  [string]$RequirementsPath,
+
+  [Parameter(Mandatory = $false)]
+  [string]$VenvBase
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$codexCliHome = $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($RequirementsPath)) {
+  $RequirementsPath = Join-Path $codexCliHome "requirements.txt"
+}
+
+if ([string]::IsNullOrWhiteSpace($VenvBase)) {
+  $VenvBase = $env:CODEXCLI_VENV
+  if ([string]::IsNullOrWhiteSpace($VenvBase)) {
+    $VenvBase = "Siggiverse"
+  }
+}
+
+$repoVenvPython = Join-Path $codexCliHome ".venv\Scripts\python.exe"
+
+$localVenvPath = Join-Path $env:LOCALAPPDATA (Join-Path $VenvBase "CodexCLI\.venv")
+$localVenvPython = Join-Path $localVenvPath "Scripts\python.exe"
+
+if (Test-Path $repoVenvPython) {
+  $pythonExe = $repoVenvPython
+} else {
+  if (-not (Test-Path $localVenvPython)) {
+    New-Item -ItemType Directory -Force -Path $localVenvPath | Out-Null
+    python -m venv $localVenvPath
+  }
+  $pythonExe = $localVenvPython
+}
+
+Write-Host "[CodexCLI] Using Python: $pythonExe"
+
+& $pythonExe -m pip install --upgrade pip
+
+if (Test-Path $RequirementsPath) {
+  & $pythonExe -m pip install -r $RequirementsPath
+} else {
+  Write-Warning "requirements.txt nicht gefunden: $RequirementsPath"
+}
+
+if ($Packages -and $Packages.Count -gt 0) {
+  & $pythonExe -m pip install @Packages
+}
+
+Write-Host "[CodexCLI] Fertig."

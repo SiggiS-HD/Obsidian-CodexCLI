@@ -1,0 +1,17 @@
+# This project is intentionally lightweight.
+# Standard-library only by default; optional features add dependencies.
+
+# PDF text extraction (Phase 7 / Schritt 5)
+pypdf>=4.0.0
+
+# Fallback extractor for PDFs that have a text layer but are not well supported by pypdf.
+# Note: Truly scanned PDFs (images only) still require OCR (not implemented).
+pdfminer.six>=20221105
+
+# PDF OCR (optional runtime dependency, used automatically when a PDF has no extractable text layer)
+# Requires external tools:
+# - Poppler (pdftoppm) for pdf2image
+# - Tesseract OCR (tesseract.exe)
+pdf2image>=1.17.0
+pytesseract>=0.3.10
+Pillow>=10.0.0
