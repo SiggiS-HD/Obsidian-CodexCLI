@@ -32,3 +32,6 @@ _Weiter.md
 
 # Internal development notes
 docs/codex_dev/
+
+# Local-only documentation
+docs/Codex_App_Workaround_VSCode_Sessions.md
