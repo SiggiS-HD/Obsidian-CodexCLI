@@ -117,7 +117,14 @@ Wenn `<CODEXCLI_HOME>` ein UNC-Pfad ist, ist eine venv **im Vault** oft unzuverl
 %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv
 ```
 
-`CODEXCLI_VENV` ist ein frei wählbarer Name für deine Umgebung (Default: `Siggiverse`).
+Bei der Standardstruktur `\\SERVER\share\<Vault>\.AddOn\CodexCLI` wird `CODEXCLI_VENV` fuer UNC/NAS automatisch aus dem Vault-Namen abgeleitet, also z.B.:
+
+```text
+\\CL10NAS\lyt\Test\.AddOn\CodexCLI
+-> %LOCALAPPDATA%\Test\CodexCLI\.venv
+```
+
+`CODEXCLI_VENV` bleibt fuer UNC/NAS nur noch ein Fallback fuer nicht standardmaessige Layouts. Wenn weder Ableitung noch expliziter Wert greifen, ist der Default `Siggiverse`.
 
 **Option A** (empfohlen, am einfachsten):
 
@@ -129,6 +136,9 @@ Wenn `<CODEXCLI_HOME>` ein UNC-Pfad ist, ist eine venv **im Vault** oft unzuverl
 ```powershell
 $codexCliHome = "<CODEXCLI_HOME>"  # UNC-Pfad ist ok
 $venvBase = $env:CODEXCLI_VENV
+if ([string]::IsNullOrWhiteSpace($venvBase)) {
+  $venvBase = Split-Path -Path (Split-Path -Path (Split-Path -Path $codexCliHome -Parent) -Parent) -Leaf
+}
 if ([string]::IsNullOrWhiteSpace($venvBase)) { $venvBase = "Siggiverse" }
 
 $venvPath = Join-Path $env:LOCALAPPDATA "$venvBase\CodexCLI\.venv"
@@ -154,7 +164,7 @@ Get-Help .\Neue_Pakete.ps1 -Examples
 Beispiele:
 
 ```powershell
-# (optional) Umgebung/Name fuer die lokale venv festlegen (Default ist "Siggiverse")
+# (optional) nur fuer Sonderfaelle explizit setzen; bei UNC/NAS wird sonst der Vault-Name verwendet
 $env:CODEXCLI_VENV = "Siggiverse"
 
 powershell -ExecutionPolicy Bypass -File "<CODEXCLI_HOME>\Neue_Pakete.ps1"
@@ -191,6 +201,7 @@ Warum `run_codexcli.cmd`?
 
 - Kein Hardcoding von `python.exe`/`main.py` im Obsidian-Kommando.
 - Funktioniert stabil auch bei NAS/UNC, weil es eine lokale venv unter `%LOCALAPPDATA%` nutzen kann.
+- Bei Standard-UNC-Layouts `\\...\<Vault>\.AddOn\CodexCLI` wird die lokale venv automatisch unter `%LOCALAPPDATA%\<Vault>\CodexCLI\.venv` ausgewaehlt.
 - Für Bildgenerierung (`SAVE_AS: ...png`) übernimmt es API-Key-Fallbacks auf `OPENAI_API_KEY` aus `CODEXCLI_OPENAI_API_KEY` oder `OBSIDIAN_OPENAI_API_KEY`.
 
 ### 8.1 Append (Antwort an Note anhängen)
@@ -318,6 +329,15 @@ cmd /V:ON /C ""<CODEXCLI_HOME>\run_codexcli.cmd" diag "{{file_path:absolute}}""
 ```
 
 `diag` schreibt im Vault-Root eine Datei `CodexCLI_Connector.md` (overwrite) und druckt denselben Inhalt auf stdout.
+
+Bei UNC/NAS zeigt `diag` zusaetzlich:
+
+- `CODEXCLI_VENV`
+- `CODEXCLI_VENV_SOURCE`
+- `CODEXCLI_EXPECTED_PYTHON`
+- `CODEXCLI_RELAUNCH_STATUS`
+
+Damit laesst sich direkt pruefen, ob die lokale Vault-venv korrekt erkannt oder per Python-Relaunch erzwungen wurde.
 
 ## 9) Optional: OCR für Scan-PDFs (Tesseract + Poppler)
 

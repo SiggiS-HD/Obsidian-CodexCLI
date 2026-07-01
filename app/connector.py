@@ -223,6 +223,10 @@ def run(args: list[str] | None = None) -> None:
         tesseract_cmd = os.environ.get("CODEXCLI_TESSERACT_CMD", "")
         poppler_path = os.environ.get("CODEXCLI_POPPLER_PATH", "")
         ocr_lang = os.environ.get("CODEXCLI_OCR_LANG", "")
+        venv_base = os.environ.get("CODEXCLI_VENV", "")
+        venv_source = os.environ.get("CODEXCLI_VENV_SOURCE", "")
+        expected_python = os.environ.get("CODEXCLI_EXPECTED_PYTHON", "")
+        relaunch_status = os.environ.get("CODEXCLI_RELAUNCH_STATUS", "")
 
         codex_cmd_env = os.environ.get("CODEXCLI_CODEX_CMD", "")
         codex_cmd_effective = get_codex_cmd()
@@ -287,6 +291,10 @@ def run(args: list[str] | None = None) -> None:
         lines.append(f"- Executable: `{sys.executable}`")
         lines.append(f"- Version: `{sys.version.replace(chr(10), ' ')}`")
         lines.append(f"- Platform: `{platform.platform()}`")
+        lines.append(f"- `CODEXCLI_VENV`: `{venv_base or '<unset>'}`")
+        lines.append(f"- `CODEXCLI_VENV_SOURCE`: `{venv_source or '<unset>'}`")
+        lines.append(f"- `CODEXCLI_EXPECTED_PYTHON`: `{expected_python or '<unset>'}`")
+        lines.append(f"- `CODEXCLI_RELAUNCH_STATUS`: `{relaunch_status or '<unset>'}`")
         lines.append("")
 
         lines.append("## Codex CLI")

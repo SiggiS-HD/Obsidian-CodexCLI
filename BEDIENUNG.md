@@ -81,6 +81,15 @@ Zusätzlich zeigt `diag` jetzt auch den isolierten Laufzeitbereich unter `<VAULT
 - Anzahl leerer Unterordner
 - kurzer Hinweis, dass liegengebliebene leere Unterordner bei Bedarf manuell gelöscht werden können
 
+Bei UNC/NAS sind zusaetzlich besonders hilfreich:
+
+- `CODEXCLI_VENV`
+- `CODEXCLI_VENV_SOURCE`
+- `CODEXCLI_EXPECTED_PYTHON`
+- `CODEXCLI_RELAUNCH_STATUS`
+
+Damit laesst sich direkt pruefen, ob der Vault-Name aus `\\...\<Vault>\.AddOn\CodexCLI` korrekt erkannt wurde und ob ein Python-seitiger Relaunch noetig war.
+
 ### 4) `fix_latex` – Alte LaTeX-Begrenzer normalisieren (einmalig)
 
 Wenn in alten Antworten noch `\(...\)` oder `\[...\]` vorkommen, kannst du die Note nachträglich bereinigen.

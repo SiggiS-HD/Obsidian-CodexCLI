@@ -91,8 +91,10 @@ Symptom:
 Fix:
 
 - `run_codexcli.cmd` nutzt automatisch eine lokale venv unter `%LOCALAPPDATA%\<CODEXCLI_VENV>\CodexCLI\.venv`.
+- Bei Standard-Layouts `\\...\<Vault>\.AddOn\CodexCLI` wird `<CODEXCLI_VENV>` automatisch als Vault-Name abgeleitet.
 - Wenn die venv noch nicht existiert, wird sie beim ersten Lauf automatisch erstellt und `requirements.txt` installiert (Voraussetzung: `py` oder `python` ist im PATH).
-- Wenn du einen anderen Basisordner willst: setze `CODEXCLI_VENV` (z.B. in deinem Shell Command vor dem Aufruf).
+- Selbst wenn aus Obsidian oder der Umgebung noch ein anderer Python-Pfad aktiv ist, erzwingt `main.py` bei UNC/NAS bei Bedarf einen Relaunch in die erwartete lokale Vault-venv.
+- Wenn du einen anderen Basisordner willst: setze `CODEXCLI_VENV` nur bei nicht standardmaessigen UNC-Layouts oder lokalen Setups.
 
 ## MOC-Steuerliste: Dateien werden nicht (oder falsch) geladen
 
@@ -151,4 +153,5 @@ Wenn du nicht weiterkommst:
 
 - Fuehre `diag` ueber Obsidian aus.
 - Vergleiche die erzeugte Datei `CodexCLI_Connector.md` im Vault-Root zwischen Dev und Zielumgebung.
+- Pruefe bei UNC/NAS besonders `CODEXCLI_VENV`, `CODEXCLI_VENV_SOURCE`, `CODEXCLI_EXPECTED_PYTHON` und `CODEXCLI_RELAUNCH_STATUS`.
 - Pruefe dort auch den Abschnitt zu `<VAULT_ROOT>\.codexcli\tmp\`; liegengebliebene leere Unterordner nach abgebrochenen Laeufen koennen manuell geloescht werden.

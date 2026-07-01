@@ -6,10 +6,6 @@ rem - For local repos, prefers repo-local venv if present.
 rem - For UNC/NAS repos, prefers a stable local venv under %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI.
 rem - Provides clear errors when paths are wrong (common when copying to NAS).
 
-rem Local venv base folder (user-specific). Adjust this if you use a different Obsidian/Vault environment.
-rem You can also override it per-call by setting CODEXCLI_VENV before invoking this script.
-if not defined CODEXCLI_VENV set "CODEXCLI_VENV=Siggiverse"
-
 set "CODEXCLI_HOME=%~dp0"
 set "MAIN_PY=%~dp0main.py"
 
@@ -17,6 +13,35 @@ if not exist "%MAIN_PY%" (
   echo [CodexCLI] ERROR: main.py nicht gefunden.
   echo [CodexCLI] Erwartet: "%MAIN_PY%"
   exit /b 2
+)
+
+rem Local venv base folder (user-specific).
+rem For UNC/NAS repos the Vault name derived from ...\<Vault>\.AddOn\CodexCLI is preferred.
+rem CODEXCLI_VENV remains a fallback for non-standard layouts.
+set "CODEXCLI_VENV_SOURCE="
+if "%CODEXCLI_HOME:~0,2%"=="\\" (
+  call :detect_venv_base_from_repo_path
+  if defined CODEXCLI_VENV (
+    set "CODEXCLI_VENV_SOURCE=vault-name-from-unc-path"
+  ) else if defined CODEXCLI_VENV_FALLBACK (
+    set "CODEXCLI_VENV=%CODEXCLI_VENV_FALLBACK%"
+    set "CODEXCLI_VENV_SOURCE=env-fallback"
+  ) else (
+    set "CODEXCLI_VENV=Siggiverse"
+    set "CODEXCLI_VENV_SOURCE=default-fallback"
+  )
+) else (
+  if defined CODEXCLI_VENV (
+    set "CODEXCLI_VENV_SOURCE=env"
+  ) else (
+    call :detect_venv_base_from_repo_path
+    if defined CODEXCLI_VENV (
+      set "CODEXCLI_VENV_SOURCE=vault-name-from-local-path"
+    ) else (
+      set "CODEXCLI_VENV=Siggiverse"
+      set "CODEXCLI_VENV_SOURCE=default-fallback"
+    )
+  )
 )
 
 set "LOCAL_VENV_PATH=%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv"
@@ -173,4 +198,22 @@ if errorlevel 1 (
 )
 
 echo [CodexCLI] Bootstrap abgeschlossen.
+exit /b 0
+
+:detect_venv_base_from_repo_path
+set "CODEXCLI_VENV_FALLBACK=%CODEXCLI_VENV%"
+set "CODEXCLI_VENV="
+set "CODEXCLI_REPO_PATH=%CODEXCLI_HOME%"
+if "%CODEXCLI_REPO_PATH:~-1%"=="\" set "CODEXCLI_REPO_PATH=%CODEXCLI_REPO_PATH:~0,-1%"
+for %%I in ("%CODEXCLI_REPO_PATH%") do (
+  if /I "%%~nxI"=="CodexCLI" (
+    for %%J in ("%%~dpI.") do (
+      if /I "%%~nxJ"==".AddOn" (
+        for %%K in ("%%~dpJ.") do (
+          if not "%%~nxK"=="" set "CODEXCLI_VENV=%%~nxK"
+        )
+      )
+    )
+  )
+)
 exit /b 0

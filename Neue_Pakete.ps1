@@ -41,13 +41,53 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Get-VenvBaseFromRepoPath {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$RepoPath
+  )
+
+  $repoDir = Split-Path -Path $RepoPath -Leaf
+  if ($repoDir -ine "CodexCLI") {
+    return $null
+  }
+
+  $addonPath = Split-Path -Path $RepoPath -Parent
+  if ((Split-Path -Path $addonPath -Leaf) -ine ".AddOn") {
+    return $null
+  }
+
+  $vaultName = Split-Path -Path (Split-Path -Path $addonPath -Parent) -Leaf
+  if ([string]::IsNullOrWhiteSpace($vaultName)) {
+    return $null
+  }
+
+  return $vaultName
+}
+
 $codexCliHome = $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($RequirementsPath)) {
   $RequirementsPath = Join-Path $codexCliHome "requirements.txt"
 }
 
 if ([string]::IsNullOrWhiteSpace($VenvBase)) {
-  $VenvBase = $env:CODEXCLI_VENV
+  $envVenvBase = $env:CODEXCLI_VENV
+  $derivedVenvBase = Get-VenvBaseFromRepoPath -RepoPath $codexCliHome
+
+  if ($codexCliHome.StartsWith('\\')) {
+    if (-not [string]::IsNullOrWhiteSpace($derivedVenvBase)) {
+      $VenvBase = $derivedVenvBase
+    } elseif (-not [string]::IsNullOrWhiteSpace($envVenvBase)) {
+      $VenvBase = $envVenvBase
+    }
+  } else {
+    if (-not [string]::IsNullOrWhiteSpace($envVenvBase)) {
+      $VenvBase = $envVenvBase
+    } elseif (-not [string]::IsNullOrWhiteSpace($derivedVenvBase)) {
+      $VenvBase = $derivedVenvBase
+    }
+  }
+
   if ([string]::IsNullOrWhiteSpace($VenvBase)) {
     $VenvBase = "Siggiverse"
   }

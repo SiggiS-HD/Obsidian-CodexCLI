@@ -145,7 +145,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-### UNC/NAS-Vault (z.B. `\\Cl10nas\lyt\Siggiverse`)
+### UNC/NAS-Vault (z.B. `\\Cl10nas\lyt\Test`)
 
 Wenn `CODEXCLI_HOME` auf einem UNC-/NAS-Pfad liegt, soll die venv nicht im Repo liegen, sondern lokal pro Benutzer unter:
 
@@ -156,7 +156,7 @@ Wenn `CODEXCLI_HOME` auf einem UNC-/NAS-Pfad liegt, soll die venv nicht im Repo 
 Beispiel:
 
 ```text
-C:\Users\siggi\AppData\Local\Siggiverse\CodexCLI\.venv
+C:\Users\siggi\AppData\Local\Test\CodexCLI\.venv
 ```
 
 Wichtig:
@@ -164,7 +164,9 @@ Wichtig:
 - `run_codexcli.cmd` wird aus Obsidian ueber `cmd.exe` gestartet.
 - Beim ersten Aufruf eines Obsidian-Commands wird die lokale venv automatisch erstellt, falls sie noch nicht existiert.
 - Eine mitkopierte Repo-`.venv` auf dem NAS sollte entfernt oder umbenannt werden.
-- Fuer UNC-/NAS-Repos bevorzugt `run_codexcli.cmd` die lokale venv unter `%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv`.
+- Bei Standard-UNC-Layouts `\\...\<Vault>\.AddOn\CodexCLI` wird `%CODEXCLI_VENV%` automatisch als Vault-Name abgeleitet.
+- Fuer UNC-/NAS-Repos bevorzugt `run_codexcli.cmd` damit typischerweise `%LOCALAPPDATA%\<Vault>\CodexCLI\.venv`.
+- `main.py` erzwingt diesen UNC-Fall bei Bedarf zusaetzlich per Python-seitigem Relaunch in die erwartete lokale venv.
 
 ## 5. Codex CLI auf dem Zielsystem pruefen
 
@@ -198,7 +200,7 @@ cmd /V:ON /C ""D:\Ideas\.AddOn\CodexCLI\run_codexcli.cmd" append "{{file_path:ab
 Hinweis fuer UNC/NAS:
 
 - Der Einstieg erfolgt ueber `run_codexcli.cmd`, nicht ueber eine manuell aktivierte PowerShell-venv.
-- Fuer UNC-/NAS-Repos bevorzugt `run_codexcli.cmd` die lokale venv unter `%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv`.
+- Fuer Standard-UNC-Layouts `\\...\<Vault>\.AddOn\CodexCLI` wird die lokale venv automatisch unter `%LOCALAPPDATA%\<Vault>\CodexCLI\.venv` ausgewaehlt.
 
 ## 7. Optional: OpenAI API Key fuer PNG-Ausgabe
 

@@ -81,7 +81,9 @@ cmd /V:ON /C ""<CODEXCLI_HOME>\run_codexcli.cmd" append "{{file_path:absolute}}"
 Das Skript `run_codexcli.cmd` nutzt:
 
 - zuerst `<CODEXCLI_HOME>\.venv\Scripts\python.exe`
-- sonst eine lokale venv unter `%LOCALAPPDATA%\<CODEXCLI_VENV>\CodexCLI\.venv\Scripts\python.exe` (hilfreich bei NAS/UNC)
+- sonst eine lokale venv unter `%LOCALAPPDATA%\<CODEXCLI_VENV>\CodexCLI\.venv\Scripts\python.exe`
+- bei UNC/NAS wird `<CODEXCLI_VENV>` bevorzugt aus `...\<Vault>\.AddOn\CodexCLI` abgeleitet
+- `main.py` erzwingt diesen UNC-Fall bei Bedarf zusaetzlich per Python-seitigem Relaunch in die erwartete lokale venv
 
 Details und weitere Kommandos: siehe [[Installation_Codex_CLI_und_Obsidian]] und [[BEDIENUNG]].
 
