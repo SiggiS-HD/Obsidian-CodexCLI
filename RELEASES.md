@@ -68,3 +68,21 @@ Recommended workflow:
 2. Create the version tag.
 3. Push the tag to GitHub.
 4. Optionally create a GitHub Release based on that tag.
+
+## Release Notes Drafts
+
+### UNC/NAS: lokale Vault-venv zuverlässig erkannt
+
+Bei Obsidian-Vaults auf UNC-/NAS-Pfaden wird die lokale Python-venv jetzt automatisch aus dem Vault-Namen abgeleitet, z.B.:
+
+`\\CL10NAS\lyt\Test\.AddOn\CodexCLI` -> `%LOCALAPPDATA%\Test\CodexCLI\.venv`
+
+Zusaetzlich erzwingt `main.py` bei Bedarf einen Relaunch in den erwarteten Interpreter, falls Obsidian oder die Umgebung noch mit einer falschen lokalen venv startet.
+
+Verbesserungen:
+
+- robustere UNC/NAS-Erkennung in `run_codexcli.cmd`
+- Python-seitige Bootstrap-/Relaunch-Absicherung
+- konsistente venv-Auswahl auch in `Neue_Pakete.ps1`
+- erweiterte `diag`-Ausgabe mit venv-Quelle und Relaunch-Status
+- Doku und Regressionstest ergänzt
