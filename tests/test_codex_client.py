@@ -102,6 +102,129 @@ class CodexClientTests(unittest.TestCase):
         self.assertEqual(tempdir_kwargs["prefix"], "codex-run-")
         self.assertEqual(Path(tempdir_kwargs["dir"]), Path(r"D:\Ideas\.codexcli\tmp"))
 
+    @patch("subprocess.run")
+    @patch("app.codex_client.get_text_model", return_value=None)
+    @patch("app.codex_client.get_codex_cmd", return_value="codex.cmd")
+    @patch("app.codex_client.tempfile.gettempdir", return_value=r"C:\Temp")
+    def test_run_codex_uses_local_temp_cwd_for_unc_vault_root(
+        self,
+        _mock_gettempdir,
+        _mock_get_codex_cmd,
+        _mock_get_text_model,
+        mock_subprocess_run,
+    ) -> None:
+        mock_subprocess_run.return_value.returncode = 0
+        mock_subprocess_run.return_value.stdout = "ok"
+        mock_subprocess_run.return_value.stderr = ""
+
+        with unittest.mock.patch("tempfile.TemporaryDirectory") as mock_tempdir:
+            mock_tempdir.return_value.__enter__.return_value = r"C:\Temp\codexcli\tmp\codex-run-123"
+            mock_tempdir.return_value.__exit__.return_value = False
+
+            run_codex("hello", vault_root=Path(r"\\CL10NAS\lyt\Siggiverse"))
+
+        _args, kwargs = mock_subprocess_run.call_args
+        self.assertEqual(kwargs["cwd"], r"C:\Temp\codexcli\tmp\codex-run-123")
+        tempdir_kwargs = mock_tempdir.call_args.kwargs
+        self.assertEqual(tempdir_kwargs["prefix"], "codex-run-")
+        self.assertEqual(Path(tempdir_kwargs["dir"]), Path(r"C:\Temp\codexcli\tmp"))
+
+    @patch("subprocess.run")
+    @patch("app.codex_client.get_text_model", return_value="gpt-5.3-codex")
+    @patch("app.codex_client.get_codex_cmd", return_value="codex.cmd")
+    def test_run_codex_retries_with_fallback_model_when_model_is_not_supported(
+        self,
+        _mock_get_codex_cmd,
+        _mock_get_text_model,
+        mock_subprocess_run,
+    ) -> None:
+        unsupported_result = unittest.mock.Mock(
+            returncode=1,
+            stdout="",
+            stderr=(
+                "ERROR: {\"type\":\"error\",\"status\":400,\"error\":{"
+                "\"type\":\"invalid_request_error\","
+                "\"message\":\"The 'gpt-5.3-codex' model is not supported when using Codex with a ChatGPT account.\"}}"
+            ),
+        )
+        success_result = unittest.mock.Mock(returncode=0, stdout="ok", stderr="")
+        mock_subprocess_run.side_effect = [unsupported_result, success_result]
+
+        result = run_codex("hello")
+
+        self.assertEqual(mock_subprocess_run.call_count, 2)
+        first_command = mock_subprocess_run.call_args_list[0].args[0]
+        second_command = mock_subprocess_run.call_args_list[1].args[0]
+        self.assertIn("--model", first_command)
+        self.assertIn("gpt-5.3-codex", first_command)
+        self.assertIn("--model", second_command)
+        fallback_model_index = second_command.index("--model")
+        self.assertEqual(second_command[fallback_model_index + 1], "gpt-5.4")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "ok")
+
+    @patch("subprocess.run")
+    @patch("app.codex_client.get_text_model", return_value="gpt-5.3-codex")
+    @patch("app.codex_client.get_codex_cmd", return_value="codex.cmd")
+    def test_run_codex_retries_with_fallback_model_when_model_error_is_in_stdout(
+        self,
+        _mock_get_codex_cmd,
+        _mock_get_text_model,
+        mock_subprocess_run,
+    ) -> None:
+        unsupported_result = unittest.mock.Mock(
+            returncode=1,
+            stdout=(
+                "ERROR: {\"type\":\"error\",\"status\":400,\"error\":{"
+                "\"type\":\"invalid_request_error\","
+                "\"message\":\"The 'gpt-5.3-codex' model is not supported when using Codex with a ChatGPT account.\"}}"
+            ),
+            stderr="",
+        )
+        success_result = unittest.mock.Mock(returncode=0, stdout="ok", stderr="")
+        mock_subprocess_run.side_effect = [unsupported_result, success_result]
+
+        result = run_codex("hello")
+
+        self.assertEqual(mock_subprocess_run.call_count, 2)
+        second_command = mock_subprocess_run.call_args_list[1].args[0]
+        fallback_model_index = second_command.index("--model")
+        self.assertEqual(second_command[fallback_model_index + 1], "gpt-5.4")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "ok")
+
+    @patch("subprocess.run")
+    @patch("app.codex_client.get_text_model", return_value=None)
+    @patch("app.codex_client.get_codex_cmd", return_value="codex.cmd")
+    def test_run_codex_retries_with_fallback_model_when_default_cli_model_is_not_supported(
+        self,
+        _mock_get_codex_cmd,
+        _mock_get_text_model,
+        mock_subprocess_run,
+    ) -> None:
+        unsupported_result = unittest.mock.Mock(
+            returncode=1,
+            stdout=(
+                "ERROR: {\"type\":\"error\",\"status\":400,\"error\":{"
+                "\"type\":\"invalid_request_error\","
+                "\"message\":\"The 'gpt-5.3-codex' model is not supported when using Codex with a ChatGPT account.\"}}"
+            ),
+            stderr="",
+        )
+        success_result = unittest.mock.Mock(returncode=0, stdout="ok", stderr="")
+        mock_subprocess_run.side_effect = [unsupported_result, success_result]
+
+        result = run_codex("hello")
+
+        self.assertEqual(mock_subprocess_run.call_count, 2)
+        first_command = mock_subprocess_run.call_args_list[0].args[0]
+        second_command = mock_subprocess_run.call_args_list[1].args[0]
+        self.assertNotIn("--model", first_command)
+        fallback_model_index = second_command.index("--model")
+        self.assertEqual(second_command[fallback_model_index + 1], "gpt-5.4")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "ok")
+
 
 class ConfigTextModelTests(unittest.TestCase):
     @patch.dict("os.environ", {"CODEXCLI_TEXT_MODEL": "gpt-5.5"}, clear=False)

@@ -15,7 +15,7 @@ Empfohlen:
 
 Optional, je nach Nutzung:
 
-- OpenAI API Key für `SAVE_AS: *.png`
+- OpenAI API Key fuer `SAVE_AS: *.png`
 - Tesseract OCR
 - Poppler
 
@@ -33,9 +33,9 @@ Empfohlen, wenn auf dem Zielsystem Git installiert ist.
 D:\Ideas\.AddOn\CodexCLI
 ```
 
-2. PowerShell öffnen
+2. PowerShell oeffnen
 
-3. In den übergeordneten Ordner wechseln:
+3. In den uebergeordneten Ordner wechseln:
 
 ```powershell
 cd "D:\Ideas\.AddOn"
@@ -57,7 +57,7 @@ git clone https://github.com/SiggiS-HD/Obsidian-CodexCLI.git CodexCLI
 
 Sinnvoll, wenn Git auf dem Zielsystem nicht installiert ist.
 
-1. Repository im Browser öffnen:
+1. Repository im Browser oeffnen:
 
 ```text
 https://github.com/SiggiS-HD/Obsidian-CodexCLI
@@ -65,7 +65,7 @@ https://github.com/SiggiS-HD/Obsidian-CodexCLI
 
 2. Auf `Code` klicken
 
-3. `Download ZIP` wählen
+3. `Download ZIP` waehlen
 
 4. ZIP-Datei entpacken
 
@@ -81,7 +81,7 @@ Wichtig:
 
 - Der finale Ordnername sollte wieder `CodexCLI` sein.
 - Nicht mit einem GitHub-Standardnamen wie
-  `Obsidian-CodexCLI-main` weiterarbeiten, wenn du später einfache Pfade
+  `Obsidian-CodexCLI-main` weiterarbeiten, wenn du spaeter einfache Pfade
   und Dokumentation verwenden willst.
 
 ### Variante C: aus einem bestehenden System kopieren
@@ -89,7 +89,7 @@ Wichtig:
 Sinnvoll, wenn du den Projektordner schon lokal auf einem anderen Rechner hast.
 
 1. Den Ordner `CodexCLI` vom bestehenden System kopieren
-2. Auf dem Zielsystem in den gewünschten Vault-Pfad legen:
+2. Auf dem Zielsystem in den gewuenschten Vault-Pfad legen:
 
 ```text
 <VAULT_ROOT>\.AddOn\CodexCLI
@@ -97,9 +97,9 @@ Sinnvoll, wenn du den Projektordner schon lokal auf einem anderen Rechner hast.
 
 Hinweis:
 
-- Die vorhandene `.venv` sollte dabei nicht mit übernommen werden.
-- Wenn sie doch mitkopiert wurde, den Ordner `.venv` auf dem Zielsystem löschen
-  und lokal neu erstellen.
+- Die vorhandene `.venv` sollte dabei nicht mit uebernommen werden.
+- Wenn sie doch mitkopiert wurde, den Ordner `.venv` auf dem Zielsystem loeschen oder umbenennen und lokal neu erstellen.
+- Bei einem Vault auf UNC/NAS ist eine Repo-`.venv` besonders problematisch, weil `run_codexcli.cmd` aus Obsidian gestartet wird und eine mitkopierte `.venv` leicht zu Verwirrung fuehrt.
 
 ## 3. Zielstruktur im Vault
 
@@ -115,13 +115,17 @@ Beispiel:
 D:\Ideas\.AddOn\CodexCLI
 ```
 
-Alternativ während der Entwicklung oder wenn der Ordner sichtbar sein soll:
+Alternativ waehrend der Entwicklung oder wenn der Ordner sichtbar sein soll:
 
 ```text
 <VAULT_ROOT>\AddOn\CodexCLI
 ```
 
 ## 4. Python-Umgebung anlegen
+
+Es gibt zwei gueltige Betriebsarten.
+
+### Lokale Arbeitskopie (z.B. `D:\Ideas\...`)
 
 PowerShell im Projektordner:
 
@@ -141,7 +145,28 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-## 5. Codex CLI auf dem Zielsystem prüfen
+### UNC/NAS-Vault (z.B. `\\Cl10nas\lyt\Siggiverse`)
+
+Wenn `CODEXCLI_HOME` auf einem UNC-/NAS-Pfad liegt, soll die venv nicht im Repo liegen, sondern lokal pro Benutzer unter:
+
+```text
+%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv
+```
+
+Beispiel:
+
+```text
+C:\Users\siggi\AppData\Local\Siggiverse\CodexCLI\.venv
+```
+
+Wichtig:
+
+- `run_codexcli.cmd` wird aus Obsidian ueber `cmd.exe` gestartet.
+- Beim ersten Aufruf eines Obsidian-Commands wird die lokale venv automatisch erstellt, falls sie noch nicht existiert.
+- Eine mitkopierte Repo-`.venv` auf dem NAS sollte entfernt oder umbenannt werden.
+- Fuer UNC-/NAS-Repos bevorzugt `run_codexcli.cmd` die lokale venv unter `%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv`.
+
+## 5. Codex CLI auf dem Zielsystem pruefen
 
 Im Terminal testen:
 
@@ -158,7 +183,7 @@ Wenn das nicht funktioniert:
 
 In Obsidian das Community-Plugin `Shell commands` aktivieren.
 
-Dann zum Beispiel ein Kommando für `append` anlegen:
+Dann zum Beispiel ein Kommando fuer `append` anlegen:
 
 ```bat
 cmd /V:ON /C ""<CODEXCLI_HOME>\run_codexcli.cmd" append "{{file_path:absolute}}""
@@ -170,7 +195,12 @@ Beispiel:
 cmd /V:ON /C ""D:\Ideas\.AddOn\CodexCLI\run_codexcli.cmd" append "{{file_path:absolute}}""
 ```
 
-## 7. Optional: OpenAI API Key für PNG-Ausgabe
+Hinweis fuer UNC/NAS:
+
+- Der Einstieg erfolgt ueber `run_codexcli.cmd`, nicht ueber eine manuell aktivierte PowerShell-venv.
+- Fuer UNC-/NAS-Repos bevorzugt `run_codexcli.cmd` die lokale venv unter `%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv`.
+
+## 7. Optional: OpenAI API Key fuer PNG-Ausgabe
 
 Nur erforderlich, wenn du `SAVE_AS: *.png` nutzen willst.
 
@@ -191,7 +221,7 @@ Falls du PDF-Dateien mit OCR-Fallback nutzen willst:
 - Tesseract installieren
 - Poppler installieren
 
-Wenn nötig, die zugehörigen Pfade über Umgebungsvariablen konfigurieren:
+Wenn noetig, die zugehoerigen Pfade ueber Umgebungsvariablen konfigurieren:
 
 - `CODEXCLI_TESSERACT_CMD`
 - `CODEXCLI_POPPLER_PATH`
@@ -210,10 +240,9 @@ Schreibe eine kurze Zusammenfassung.
 ## Unterhaltung
 ```
 
-Danach den Shell-Command für `append` ausführen.
+Danach den Shell-Command fuer `append` ausfuehren.
 
-Wenn alles korrekt eingerichtet ist, sollte Codex die Antwort in die Note
-zurückschreiben.
+Wenn alles korrekt eingerichtet ist, sollte Codex die Antwort in die Note zurueckschreiben.
 
 ## 10. Troubleshooting: `service_tier`
 
@@ -224,33 +253,30 @@ Error loading config.toml: unknown variant `default`, expected `fast` or `flex`
 in `service_tier`
 ```
 
-dann kommt das Problem in der Regel nicht aus `Obsidian-CodexCLI`, sondern aus
-der globalen Codex-Konfiguration unter:
+dann kommt das Problem in der Regel nicht aus `Obsidian-CodexCLI`, sondern aus der globalen Codex-Konfiguration unter:
 
 ```text
 C:\Users\<USER>\.codex\config.toml
 ```
 
-`service_tier` beschreibt die bevorzugte Leistungs- bzw. Betriebsstufe von
-Codex. Es ist nicht das Modell selbst und auch nicht die Reasoning-Stufe.
+`service_tier` beschreibt die bevorzugte Leistungs- bzw. Betriebsstufe von Codex. Es ist nicht das Modell selbst und auch nicht die Reasoning-Stufe.
 
 Praktisch wichtig:
 
 - `fast`
-  schneller, aber mit höherem Verbrauch
+  schneller, aber mit hoeherem Verbrauch
 - `flex`
-  gültiger konservativer Wert
+  gueltiger konservativer Wert
 - `default`
-  kann in neueren Codex-Versionen ungültig sein
+  kann in neueren Codex-Versionen ungueltig sein
 
-Für ein ChatGPT-Plus-Konto gilt:
+Fuer ein ChatGPT-Plus-Konto gilt:
 
 - `fast` ist nur sinnvoll, wenn du bewusst den Fast Mode nutzen willst
-- `flex` ist ein gültiger expliziter Wert
-- am robustesten ist oft, die `service_tier`-Zeile ganz zu entfernen, damit
-  Codex selbst den passenden Standard wählt
+- `flex` ist ein gueltiger expliziter Wert
+- am robustesten ist oft, die `service_tier`-Zeile ganz zu entfernen, damit Codex selbst den passenden Standard waehlt
 
-Empfohlene Lösung bei diesem Fehler:
+Empfohlene Loesung bei diesem Fehler:
 
 - `service_tier = "default"` aus `config.toml` entfernen
 
@@ -272,9 +298,9 @@ service_tier = "flex"
 ## Kurzfassung
 
 1. Repository nach `<VAULT_ROOT>\.AddOn\CodexCLI` holen
-2. `.venv` lokal neu anlegen
+2. `.venv` lokal neu anlegen oder bei UNC/NAS automatisch bootstrapen lassen
 3. `requirements.txt` installieren
-4. `codex --version` prüfen
+4. `codex --version` pruefen
 5. Obsidian `Shell commands` konfigurieren
 6. optional API-Key und OCR-Tools einrichten
-7. Test-Note ausführen
+7. Test-Note ausfuehren

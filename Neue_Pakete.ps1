@@ -7,8 +7,8 @@
   die Python-venv aber lokal auf dem Windows-PC liegt.
 
   Es nutzt die gleiche venv-Logik wie run_codexcli.cmd:
-  - Wenn <CODEXCLI_HOME>\.venv existiert, wird diese verwendet.
-  - Sonst wird eine lokale venv unter %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv verwendet.
+  - Bei lokalen Repos wird <CODEXCLI_HOME>\.venv bevorzugt.
+  - Bei UNC/NAS-Repos wird %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv bevorzugt.
 
 .PARAMETER Packages
   Zusaetzliche Pakete, die installiert werden sollen (z.B. "requests", "pydantic==2.7.0").
@@ -54,18 +54,40 @@ if ([string]::IsNullOrWhiteSpace($VenvBase)) {
 }
 
 $repoVenvPython = Join-Path $codexCliHome ".venv\Scripts\python.exe"
-
 $localVenvPath = Join-Path $env:LOCALAPPDATA (Join-Path $VenvBase "CodexCLI\.venv")
 $localVenvPython = Join-Path $localVenvPath "Scripts\python.exe"
+$isUncRepo = $codexCliHome.StartsWith('\\')
 
-if (Test-Path $repoVenvPython) {
-  $pythonExe = $repoVenvPython
-} else {
+function New-LocalVenv {
   if (-not (Test-Path $localVenvPython)) {
     New-Item -ItemType Directory -Force -Path $localVenvPath | Out-Null
     python -m venv $localVenvPath
   }
-  $pythonExe = $localVenvPython
+
+  if (-not (Test-Path $localVenvPython)) {
+    throw "Lokale venv wurde erstellt, aber python.exe wurde nicht gefunden: $localVenvPython"
+  }
+
+  return $localVenvPython
+}
+
+if ($isUncRepo) {
+  if (Test-Path $localVenvPython) {
+    $pythonExe = $localVenvPython
+  } elseif (Test-Path $repoVenvPython) {
+    Write-Warning "Repo-.venv auf UNC/NAS gefunden. Lokale venv waere robuster."
+    $pythonExe = $repoVenvPython
+  } else {
+    $pythonExe = New-LocalVenv
+  }
+} else {
+  if (Test-Path $repoVenvPython) {
+    $pythonExe = $repoVenvPython
+  } elseif (Test-Path $localVenvPython) {
+    $pythonExe = $localVenvPython
+  } else {
+    $pythonExe = New-LocalVenv
+  }
 }
 
 Write-Host "[CodexCLI] Using Python: $pythonExe"

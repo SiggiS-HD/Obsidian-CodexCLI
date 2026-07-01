@@ -9,7 +9,7 @@ Bildgenerierung fehlgeschlagen (HTTP 400): Invalid size '1536x864'. Supported si
 
 Ursache:
 
-- Das verwendete Bildmodell akzeptiert nur die festen Größen `1024x1024`, `1024x1536`, `1536x1024` oder `auto`.
+- Das verwendete Bildmodell akzeptiert nur die festen Groessen `1024x1024`, `1024x1536`, `1536x1024` oder `auto`.
 - Werte wie `1536x864` (echtes 16:9) werden abgelehnt.
 
 Aktuelles Verhalten in CodexCLI:
@@ -21,7 +21,7 @@ Aktuelles Verhalten in CodexCLI:
 Empfehlung:
 
 - Nutze weiter `ASPECT: 16:9` oder `ASPECT: 4:3`; CodexCLI setzt intern `auto` und die API waehlt ein passendes Format.
-- Wenn du harte Pixelmaße brauchst, muss das Modell/API diese Größe explizit unterstützen.
+- Wenn du harte Pixelmasse brauchst, muss das Modell/API diese Groesse explizit unterstuetzen.
 
 
 ## Obsidian meldet „Datei nicht gefunden“
@@ -32,12 +32,12 @@ Typische Ursache:
 
 Fix:
 
-- Prüfe, ob dein tatsächlicher Pfad `<VAULT_ROOT>\<ADDON_DIR>\CodexCLI` ist.
+- Pruefe, ob dein tatsaechlicher Pfad `<VAULT_ROOT>\<ADDON_DIR>\CodexCLI` ist.
 - Standard (Ziel) ist `.AddOn`. `AddOn` ist nur die Dev-Variante.
 
 ## `codex`/`codex.cmd` wird nicht gefunden
 
-Prüfen:
+Pruefen:
 
 ```powershell
 where.exe codex
@@ -48,9 +48,9 @@ codex --version
 Fix:
 
 - Stelle sicher, dass `%APPDATA%\npm` im User-PATH enthalten ist.
-- Alternativ setze pro Aufruf `CODEXCLI_CODEX_CMD` auf den vollständigen Pfad zur `codex.cmd` (robust in Obsidian/cmd-Umgebungen).
+- Alternativ setze pro Aufruf `CODEXCLI_CODEX_CMD` auf den vollstaendigen Pfad zur `codex.cmd` (robust in Obsidian/cmd-Umgebungen).
 
-## CodexCLI läuft in PowerShell, aber nicht aus Obsidian
+## CodexCLI laeuft in PowerShell, aber nicht aus Obsidian
 
 Typische Ursachen:
 
@@ -60,7 +60,27 @@ Typische Ursachen:
 Fix:
 
 - Verwende die Beispiele aus `Installation_Codex_CLI_und_Obsidian.md` (sie sind bewusst `cmd /V:ON /C ...`).
-- Starte bevorzugt über `run_codexcli.cmd` statt `python.exe ... main.py ...`.
+- Starte bevorzugt ueber `run_codexcli.cmd` statt `python.exe ... main.py ...`.
+
+## NAS/UNC: Repo-`.venv` wurde mitkopiert
+
+Symptom:
+
+- Der Vault liegt auf `\\NAS\...`.
+- Du hast lokal bereits `%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv` angelegt.
+- Trotzdem erscheint ein Fehler wie `No Python at 'C:\...\Python312\python.exe'`.
+
+Ursache:
+
+- Eine alte oder von einem anderen System kopierte Repo-`.venv` liegt noch unter `<CODEXCLI_HOME>\.venv`.
+- Solche virtuellen Umgebungen enthalten feste Verweise auf die urspruengliche Python-Installation.
+- `run_codexcli.cmd` bevorzugt bei UNC/NAS inzwischen die lokale venv, aber eine mitkopierte Repo-`.venv` bleibt ein klarer Stoerfaktor und sollte entfernt oder umbenannt werden.
+
+Fix:
+
+- Repo-`.venv` auf dem NAS loeschen oder z.B. in `.venv_OFF` umbenennen.
+- Danach den Obsidian-Command erneut starten.
+- Falls die lokale venv noch nicht existiert, wird sie beim ersten Aufruf automatisch unter `%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv` erstellt.
 
 ## NAS/UNC: venv im Repo existiert nicht
 
@@ -78,29 +98,29 @@ Fix:
 
 Symptom:
 
-- Du referenzierst eine MOC-Datei im `## Prompt`, aber es werden nicht die erwarteten Dateien in der gewünschten Reihenfolge geladen.
+- Du referenzierst eine MOC-Datei im `## Prompt`, aber es werden nicht die erwarteten Dateien in der gewuenschten Reihenfolge geladen.
 - Oder CodexCLI schreibt einen Fehler zu „MOC-Eintrag“/„Unterlisten“/„verschachtelte MOC“.
 
-Prüfen:
+Pruefen:
 
 - Nutze [[MOC_TEMPLATE]] als Ausgangspunkt.
-- Stelle sicher, dass die **erste Überschrift** der Datei das Wort `MOC` enthält (z.B. `# Projekt MOC`).
-- Stelle sicher, dass die Steuerliste **nur** aus einfachen nummerierten Listeneinträgen besteht (`1. ...`).
+- Stelle sicher, dass die **erste Ueberschrift** der Datei das Wort `MOC` enthaelt (z.B. `# Projekt MOC`).
+- Stelle sicher, dass die Steuerliste **nur** aus einfachen nummerierten Listeneintraegen besteht (`1. ...`).
 
 Typische Ursachen + Fix:
 
-- **Unterlisten / Einrückungen** → nicht unterstützt.
-	- Fix: Keine eingerückten `  1.`-Punkte; alles auf Top-Level.
-- **Mehr als eine Referenz pro Listeneintrag** (z.B. `1. [[A]] und [[B]]`) → nicht unterstützt.
-	- Fix: Pro Zeile genau eine Referenz; ggf. auf mehrere Zeilen aufteilen.
-- **Absolute Windows-Pfade** in der MOC (z.B. `C:\...`) → nicht unterstützt.
-	- Fix: WikiLinks oder relative Links verwenden.
-- **Verschachtelte MOCs** (eine MOC referenziert eine weitere MOC) → nicht unterstützt.
-	- Fix: Nur eine Ebene; MOC darf keine andere MOC einbinden.
+- **Unterlisten / Einrueckungen** -> nicht unterstuetzt.
+  - Fix: Keine eingerueckten `  1.`-Punkte; alles auf Top-Level.
+- **Mehr als eine Referenz pro Listeneintrag** (z.B. `1. [[A]] und [[B]]`) -> nicht unterstuetzt.
+  - Fix: Pro Zeile genau eine Referenz; ggf. auf mehrere Zeilen aufteilen.
+- **Absolute Windows-Pfade** in der MOC (z.B. `C:\...`) -> nicht unterstuetzt.
+  - Fix: WikiLinks oder relative Links verwenden.
+- **Verschachtelte MOCs** (eine MOC referenziert eine weitere MOC) -> nicht unterstuetzt.
+  - Fix: Nur eine Ebene; MOC darf keine andere MOC einbinden.
 
 Hinweis:
 
-- Relative Pfade in der MOC werden relativ zur **MOC-Datei** aufgelöst.
+- Relative Pfade in der MOC werden relativ zur **MOC-Datei** aufgeloest.
 - Die MOC-Datei selbst wird nicht als Kontext gesendet; nur die aufgelisteten Ziele.
 - Details stehen in [[FILE_REFERENCES]].
 
@@ -116,19 +136,19 @@ Ursache:
 
 Fix:
 
-- Installiere Poppler über winget (siehe Installation).
+- Installiere Poppler ueber winget (siehe Installation).
 - Setze `CODEXCLI_POPPLER_PATH` explizit auf den Poppler-Ordner `...\Library\bin`.
-- Nutze `diag` und prüfe dort `where pdftoppm`.
+- Nutze `diag` und pruefe dort `where pdftoppm`.
 
 Wenn OCR wegen Sprache scheitert (z.B. Meldungen zu `deu.traineddata`):
 
-- Prüfe die verfügbaren Tesseract-Sprachen: `tesseract --list-langs`
+- Pruefe die verfuegbaren Tesseract-Sprachen: `tesseract --list-langs`
 - Wenn `deu` fehlt: deutsches Sprachpaket nachinstallieren oder `CODEXCLI_OCR_LANG=eng` setzen.
 
 ## Diagnose: `diag`
 
 Wenn du nicht weiterkommst:
 
-- Führe `diag` über Obsidian aus.
+- Fuehre `diag` ueber Obsidian aus.
 - Vergleiche die erzeugte Datei `CodexCLI_Connector.md` im Vault-Root zwischen Dev und Zielumgebung.
-- Prüfe dort auch den Abschnitt zu `<VAULT_ROOT>\.codexcli\tmp\`; liegengebliebene leere Unterordner nach abgebrochenen Läufen können manuell gelöscht werden.
+- Pruefe dort auch den Abschnitt zu `<VAULT_ROOT>\.codexcli\tmp\`; liegengebliebene leere Unterordner nach abgebrochenen Laeufen koennen manuell geloescht werden.

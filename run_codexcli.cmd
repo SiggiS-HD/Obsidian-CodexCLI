@@ -2,8 +2,8 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 rem CodexCLI launcher for DEV+PROD.
-rem - Uses repo-local venv if present.
-rem - Otherwise falls back to a stable local venv under %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI.
+rem - For local repos, prefers repo-local venv if present.
+rem - For UNC/NAS repos, prefers a stable local venv under %LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI.
 rem - Provides clear errors when paths are wrong (common when copying to NAS).
 
 rem Local venv base folder (user-specific). Adjust this if you use a different Obsidian/Vault environment.
@@ -19,20 +19,37 @@ if not exist "%MAIN_PY%" (
   exit /b 2
 )
 
-set "PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
-if exist "%PYTHON_EXE%" goto have_python
-
 set "LOCAL_VENV_PATH=%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv"
-set "PYTHON_EXE=%LOCAL_VENV_PATH%\Scripts\python.exe"
-if exist "%PYTHON_EXE%" goto have_python
+set "LOCAL_PYTHON_EXE=%LOCAL_VENV_PATH%\Scripts\python.exe"
+set "REPO_PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
+set "PYTHON_EXE="
+
+rem UNC paths typically mean the repo lives on a NAS; prefer the local per-user venv there.
+if "%CODEXCLI_HOME:~0,2%"=="\\" (
+  call :use_local_venv
+  if defined PYTHON_EXE goto have_python
+  call :use_repo_venv
+  if defined PYTHON_EXE (
+    echo [CodexCLI] Hinweis: Repo-.venv auf UNC/NAS gefunden. Lokale venv waere robuster.
+    goto have_python
+  )
+) else (
+  call :use_repo_venv
+  if defined PYTHON_EXE goto have_python
+  call :use_local_venv
+  if defined PYTHON_EXE goto have_python
+)
 
 call :bootstrap_local_venv
-if exist "%PYTHON_EXE%" goto have_python
+if exist "%LOCAL_PYTHON_EXE%" (
+  set "PYTHON_EXE=%LOCAL_PYTHON_EXE%"
+  goto have_python
+)
 
 echo [CodexCLI] ERROR: Keine passende Python-venv gefunden.
 echo [CodexCLI] Geprueft:
-echo   - "%~dp0.venv\Scripts\python.exe"
 echo   - "%LOCALAPPDATA%\%CODEXCLI_VENV%\CodexCLI\.venv\Scripts\python.exe"
+echo   - "%~dp0.venv\Scripts\python.exe"
 echo [CodexCLI] Hinweis: CODEXCLI_VENV ist aktuell "%CODEXCLI_VENV%". Passe diese Variable an, falls du eine andere Umgebung nutzt.
 exit /b 2
 
@@ -93,6 +110,14 @@ if "%~1"=="" (
 "%PYTHON_EXE%" "%MAIN_PY%" %*
 exit /b %ERRORLEVEL%
 
+:use_local_venv
+if exist "%LOCAL_PYTHON_EXE%" set "PYTHON_EXE=%LOCAL_PYTHON_EXE%"
+exit /b 0
+
+:use_repo_venv
+if exist "%REPO_PYTHON_EXE%" set "PYTHON_EXE=%REPO_PYTHON_EXE%"
+exit /b 0
+
 :bootstrap_local_venv
 rem Create a stable local venv and install requirements when running from NAS/UNC.
 rem This is intentionally minimal and only triggers when the local venv is missing.
@@ -123,13 +148,13 @@ if errorlevel 1 (
   exit /b 2
 )
 
-if not exist "%PYTHON_EXE%" (
+if not exist "%LOCAL_PYTHON_EXE%" (
   echo [CodexCLI] ERROR: venv wurde erstellt, aber python.exe wurde nicht gefunden.
-  echo [CodexCLI] Erwartet: "%PYTHON_EXE%"
+  echo [CodexCLI] Erwartet: "%LOCAL_PYTHON_EXE%"
   exit /b 2
 )
 
-"%PYTHON_EXE%" -m pip install --upgrade pip
+"%LOCAL_PYTHON_EXE%" -m pip install --upgrade pip
 if errorlevel 1 (
   echo [CodexCLI] ERROR: pip Upgrade fehlgeschlagen.
   exit /b 2
@@ -141,7 +166,7 @@ if not exist "%CODEXCLI_HOME%requirements.txt" (
   exit /b 2
 )
 
-"%PYTHON_EXE%" -m pip install -r "%CODEXCLI_HOME%requirements.txt"
+"%LOCAL_PYTHON_EXE%" -m pip install -r "%CODEXCLI_HOME%requirements.txt"
 if errorlevel 1 (
   echo [CodexCLI] ERROR: pip install -r requirements.txt fehlgeschlagen.
   exit /b 2
